@@ -11,7 +11,6 @@ def Log_Event_Detection(LOGS_DIR, LOG_FILE_PATH, category: str, file_name: str, 
         "file_path": str(file_path),
     }
 
-    # Ensure the Logs directory exists
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
     with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:

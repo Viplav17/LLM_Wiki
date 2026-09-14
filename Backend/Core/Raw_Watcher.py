@@ -1,34 +1,21 @@
 import time
-import json
+import sys
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from pathlib import Path
+from pathlib import Path  
 
-# Base directory: Backend/Core/Raw_Watcher.py -> Core (parent) -> Backend (parent) -> LLM_Wiki (parent)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR))
+
+from Backend.Util.Util import Log_Event_Detection 
+from Backend.Core.Raw_Process import process_file
 
 # Dynamic paths derived from the repository root
 VAULT_DIR = BASE_DIR / "AI-Brain-Vault"
 CLIPPINGS_DIR_PATH = VAULT_DIR / "Raw" / "clippings"
 LOGS_DIR = BASE_DIR / "Logs"
 LOG_FILE_PATH = LOGS_DIR / "Jarvis_Logs.jsonl"
-
-
-def log_event(category: str, file_name: str, file_path: Path):
-    """Appends a new event record to the JSONL log file without rewriting historical logs."""
-    log_entry = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "category": category,
-        "file_name": file_name,
-        "file_path": str(file_path),
-    }
-
-    # Ensure the Logs directory exists
-    LOGS_DIR.mkdir(parents=True, exist_ok=True)
-
-    with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(log_entry) + "\n")
 
 
 class RawFolderHandler(FileSystemEventHandler):
@@ -39,10 +26,12 @@ class RawFolderHandler(FileSystemEventHandler):
         file_path = Path(event.src_path)
 
         if file_path.suffix in [".md", ".txt"]:
-            category = file_path.parent.name
+            category = file_path.parent.name.lower()
 
             print(f"\n[Jarvis Event] New '{category}' clipping detected: {file_path.name}")
-            log_event(category, file_path.name, file_path)
+            Log_Event_Detection(LOGS_DIR, LOG_FILE_PATH, category, file_path.name, file_path)
+
+            process_file(file_path, category)
 
 
 def start_watching():
