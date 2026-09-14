@@ -2,3 +2,4 @@ AI-Brain-Vault/
 .venv/
 .obsidian/
 Logs/
+__pycache__
